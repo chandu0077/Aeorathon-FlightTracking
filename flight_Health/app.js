@@ -1,73 +1,64 @@
 // app.js
-const express = require("express");
-const bodyParser = require("body-parser");
-const healthRoutes = require("./Health_Routes");
-const pathRoutes = require("./Path_routes");
-const http = require("http");
-const socketIo = require("socket.io");
+const express = require('express');
+const bodyParser = require('body-parser');
+const healthRoutes = require('./Health_Routes');
+const http = require('http');
+const socketIo = require('socket.io');
 
 const app = express();
 const port = 3000;
 
 // Middleware
 app.use(bodyParser.json());
-app.use(express.static("public"));
+app.use(express.static('public'));
 
 // Routes
-app.use("/health", healthRoutes);
-app.use("/path", pathRoutes);
+app.use('/health', healthRoutes);
 
-// Create HTTP server
+// Create server
 const server = http.createServer(app);
 const io = socketIo(server);
 
-io.on("connection", (socket) => {
-  console.log("A user connected");
-  socket.on("disconnect", () => {
-    console.log("User disconnected");
-  });
-
-  // Handle incoming health data
-  socket.on("healthData", (data) => {
-    // Check health data and emit alerts if needed
-    const alerts = checkHealthData(data);
-    if (alerts.length > 0) {
-      io.emit("alert", alerts);
-    } else {
-      // io.emit("alert", ["All parameters are within safe ranges."]);
-    }
-  });
-});
-
-const checkHealthData = (params) => {
-  const thresholds = {
-    altitude: { min: 1000, max: 40000 }, // in feet
-    speed: { min: 150, max: 600 }, // in knots
-    engineTemperature: { max: 1000 }, // in degrees Celsius
-    turbinePressure: { min: 20, max: 60 }, // in psi
-    fuelLevel: { min: 500 }, // in liters
-    cabinPressure: { min: 11, max: 15 }, // in psi
-    hydraulicFluidLevel: { min: 2, max: 5 }, // in liters
-    oilPressure: { min: 20, max: 50 }, // in psi
-  };
-
-  let alerts = [];
-
-  for (let param in params) {
-    if (thresholds[param]) {
-      if (
-        params[param] < thresholds[param].min ||
-        params[param] > thresholds[param].max
-      ) {
-        alerts.push(`${param} is out of safe range: ${params[param]}`);
-      }
-    }
-  }
-
-  return alerts;
+let flightParams = {
+    altitude: 35000, // in feet
+    speed: 0, // in knots
+    engineTemperature: 900, // in degrees Celsius
+    turbinePressure: 55, // in psi
+    fuelLevel: 600, // in liters
+    cabinPressure: 12, // in psi
+    hydraulicFluidLevel: 3, // in liters
+    oilPressure: 45 // in psi
 };
+
+// Simulate flight data change
+setInterval(() => {
+    // Simulate data changes
+    flightParams.fuelLevel -= 0.5;
+    flightParams.altitude += 50;
+    flightParams.speed += 100;
+    flightParams.engineTemperature += 0.5;
+    // Update flight data
+    io.emit('flightData', flightParams);
+}, 6000); // Every 1 minutes
+
+setInterval(()=>{
+    flightParams.altitude -= 100;
+    flightParams.speed -= 20;
+    io.emit('flightData', flightParams);
+}, 600000);
+
+io.on('connection', (socket) => {
+    console.log('New client connected');
+
+    // Send initial flight data
+    socket.emit('flightData', flightParams);
+
+    socket.on('disconnect', () => {
+        console.log('Client disconnected');
+    });
+});
 
 // Start the server
 server.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+    console.log(`Server is running on http://localhost:${port}`);
 });

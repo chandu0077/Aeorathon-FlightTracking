@@ -1,169 +1,59 @@
 <!DOCTYPE html>
 <html>
-  <head>
+<head>
     <title>Flight Health Monitoring</title>
-    <script src="https://cesium.com/downloads/cesiumjs/releases/1.82/Build/Cesium/Cesium.js"></script>
-    <link
-      href="https://cesium.com/downloads/cesiumjs/releases/1.82/Build/Cesium/Widgets/widgets.css"
-      rel="stylesheet"
-    />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap"
-      rel="stylesheet"
-    />
-    <link href="index.css" rel="stylesheet" />
-  </head>
-  <body>
-    <div id="pageOne">
-      <h1 class="flight-title">AirBus Aerothon</h1>
-      <div class="flight-inputs">
-        <form onsubmit="return false;">
-          <div class="form-details">
-            <!-- Arrival -->
-            <label for="fname">From</label><br />
-            <div id="arrivalBlock">
-              <select id="arrivalSelect" onchange="addDestination(this)">
-                <option disabled="" selected="">Select Option</option>
-              </select>
-            </div>
-
-            <!-- Destination -->
-            <label for="lname">To</label><br />
-            <div id="destinationBlock">
-              <select id="destinationSelect">
-                <option disabled="" selected="">Select Option</option>
-              </select>
-            </div>
-
-            <div class="form-submit">
-              <input
-                type="button"
-                class="form-btn"
-                onclick="getFlightData()"
-                value="Submit"
-              />
-            </div>
-          </div>
-          <br /><br />
-        </form>
-      </div>
-    </div>
-
-    <div id="pageTwo">
-      <div id="cesiumContainer"></div>
-      <div class="flight-details">
-        <p class="health-title">Flight Health Monitoring</p>
-        <div id="dashboard">
-          <div class="parameter">Altitude: <span id="altitude">0</span> ft</div>
-          <div class="parameter">Speed: <span id="speed">0</span> knots</div>
-          <div class="parameter">
-            Engine Temperature: <span id="engineTemperature">0</span> °C
-          </div>
-          <div class="parameter">
-            Turbine Pressure: <span id="turbinePressure">0</span> psi
-          </div>
-          <div class="parameter">
-            Fuel Level: <span id="fuelLevel">0</span> liters
-          </div>
-          <div class="parameter">
-            Cabin Pressure: <span id="cabinPressure">0</span> psi
-          </div>
-          <div class="parameter">
-            Hydraulic Fluid Level:
-            <span id="hydraulicFluidLevel">0</span> liters
-          </div>
-          <div class="parameter">
-            Oil Pressure: <span id="oilPressure">0</span> psi
-          </div>
-        </div>
-        <!-- <div id="alerts"></div> -->
-      </div>
-    </div>
+    <style>
+        .parameter {
+            margin: 10px 0;
+        }
+        .alert {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Flight Health Monitoring</h1>
+    <div id="flightData"></div>
+    <div id="alerts"></div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-      const socket = io();
+        const socket = io();
 
-      function sendHealthData() {
-        const params = {
-          altitude: parseFloat(document.getElementById("altitude").innerText),
-          speed: parseFloat(document.getElementById("speed").innerText),
-          engineTemperature: parseFloat(
-            document.getElementById("engineTemperature").innerText,
-          ),
-          turbinePressure: parseFloat(
-            document.getElementById("turbinePressure").innerText,
-          ),
-          fuelLevel: parseFloat(document.getElementById("fuelLevel").innerText),
-          cabinPressure: parseFloat(
-            document.getElementById("cabinPressure").innerText,
-          ),
-          hydraulicFluidLevel: parseFloat(
-            document.getElementById("hydraulicFluidLevel").innerText,
-          ),
-          oilPressure: parseFloat(
-            document.getElementById("oilPressure").innerText,
-          ),
-        };
+        socket.on('flightData', (data) => {
+            document.getElementById('flightData').innerHTML = `
+                <div class="parameter">Altitude: ${data.altitude} feet</div>
+                <div class="parameter">Speed: ${data.speed} knots</div>
+                <div class="parameter">Engine Temperature: ${data.engineTemperature} °C</div>
+                <div class="parameter">Turbine Pressure: ${data.turbinePressure} psi</div>
+                <div class="parameter">Fuel Level: ${data.fuelLevel} liters</div>
+                <div class="parameter">Cabin Pressure: ${data.cabinPressure} psi</div>
+                <div class="parameter">Hydraulic Fluid Level: ${data.hydraulicFluidLevel} liters</div>
+                <div class="parameter">Oil Pressure: ${data.oilPressure} psi</div>
+            `;
 
-        socket.emit("healthData", params);
-      }
-
-      socket.on("alert", (alerts) => {
-        const alertsDiv = document.getElementById("alerts");
-        alertsDiv.innerHTML = "";
-        alerts.forEach((alert) => {
-          const alertDiv = document.createElement("div");
-          alertDiv.className = alert.includes("out of safe range")
-            ? "alert"
-            : "safe";
-          alertDiv.innerText = alert;
-          alertsDiv.appendChild(alertDiv);
+            checkAlerts(data);
         });
-      });
 
-      // Simulate real-time data changes
-      setInterval(() => {
-        document.getElementById("altitude").innerText = (
-          1000 +
-          Math.random() * 39000
-        ).toFixed(2);
-        document.getElementById("speed").innerText = (
-          150 +
-          Math.random() * 450
-        ).toFixed(2);
-        document.getElementById("engineTemperature").innerText = (
-          800 +
-          Math.random() * 200
-        ).toFixed(2);
-        document.getElementById("turbinePressure").innerText = (
-          20 +
-          Math.random() * 40
-        ).toFixed(2);
-        document.getElementById("fuelLevel").innerText = (
-          500 +
-          Math.random() * 1000
-        ).toFixed(2);
-        document.getElementById("cabinPressure").innerText = (
-          11 +
-          Math.random() * 4
-        ).toFixed(2);
-        document.getElementById("hydraulicFluidLevel").innerText = (
-          2 +
-          Math.random() * 3
-        ).toFixed(2);
-        document.getElementById("oilPressure").innerText = (
-          20 +
-          Math.random() * 30
-        ).toFixed(2);
+        function checkAlerts(data) {
+            const alerts = [];
+            if (data.altitude < 1000 || data.altitude > 40000) alerts.push(`Altitude is out of safe range: ${data.altitude}`);
+            if (data.speed < 0 || data.speed > 600) alerts.push(`Speed is out of safe range: ${data.speed}`);
+            if (data.engineTemperature > 1000) alerts.push(`Engine Temperature is out of safe range: ${data.engineTemperature}`);
+            if (data.turbinePressure < 20 || data.turbinePressure > 60) alerts.push(`Turbine Pressure is out of safe range: ${data.turbinePressure}`);
+            if (data.fuelLevel < 500) alerts.push(`Fuel Level is out of safe range: ${data.fuelLevel}`);
+            if (data.cabinPressure < 11 || data.cabinPressure > 15) alerts.push(`Cabin Pressure is out of safe range: ${data.cabinPressure}`);
+            if (data.hydraulicFluidLevel < 2 || data.hydraulicFluidLevel > 5) alerts.push(`Hydraulic Fluid Level is out of safe range: ${data.hydraulicFluidLevel}`);
+            if (data.oilPressure < 20 || data.oilPressure > 50) alerts.push(`Oil Pressure is out of safe range: ${data.oilPressure}`);
 
-        sendHealthData();
-      }, 5000);
+            const alertsDiv = document.getElementById('alerts');
+            if (alerts.length > 0) {
+                alertsDiv.innerHTML = alerts.map(alert => `<div class="alert">${alert}</div>`).join('');
+            } else {
+                alertsDiv.innerHTML = '<div>All parameters are within safe ranges.</div>';
+            }
+        }
     </script>
-
-    <script src="index.js"></script>
-    <script src="flight.js"></script>
-  </body>
+</body>
 </html>
