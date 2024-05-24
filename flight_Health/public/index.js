@@ -61,6 +61,7 @@ const getFlightData = async () => {
       });
   };
 
+  // Comment this if statement to run the project with dummy data
   if (Object.keys(fromData).length > 0) {
     const flightPath = await getFlightPathData();
   }
