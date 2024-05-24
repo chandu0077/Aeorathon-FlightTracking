@@ -27,10 +27,43 @@ const getFlightData = async () => {
   const fromData = await getLatLong(asValue.value);
   const toData = await getLatLong(dsValue.value);
 
-  const getFlightPathData = () => {};
+  const getFlightPathData = async () => {
+    return fetch(
+      `/path?arrivalLat=${fromData.lat}&arrivalLon=${fromData.lon}}&destLat=${toData.lat}&destLon=${toData.lon}`,
+      // {
+      //   // Adding method type
+      //   method: "POST",
 
-  console.log("fromData", fromData);
-  console.log("toData", toData);
+      //   // Adding body or contents to send
+      //   body: JSON.stringify({
+      //     arrival: {
+      //       latitude: fromData.lat,
+      //       longitude: fromData.lon,
+      //     },
+      //     destination: {
+      //       latitude: toData.lat,
+      //       longitude: toData.lon,
+      //     },
+      //   }),
+      //   // Adding headers to the request
+      //   headers: {
+      //     "Content-type": "application/json; charset=UTF-8",
+      //   },
+      // },
+    )
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        console.log("FLIGHT PATH", data);
+        return data;
+        // return { lat: data.coord.lat, lon: data.coord.lon };
+      });
+  };
+
+  if (Object.keys(fromData).length > 0) {
+    const flightPath = await getFlightPathData();
+  }
 
   // call the api using fetch with arrival & destination.
 

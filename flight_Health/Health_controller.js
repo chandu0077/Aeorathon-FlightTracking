@@ -32,12 +32,10 @@ const checkFlightHealth = (req, res) => {
   if (alerts.length > 0) {
     return res.status(200).json({ status: "warning", alerts });
   } else {
-    return res
-      .status(200)
-      .json({
-        status: "ok",
-        message: "All parameters are within safe ranges.",
-      });
+    return res.status(200).json({
+      status: "ok",
+      // message: "All parameters are within safe ranges.",
+    });
   }
 };
 

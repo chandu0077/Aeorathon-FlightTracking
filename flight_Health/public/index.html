@@ -7,6 +7,12 @@
       href="https://cesium.com/downloads/cesiumjs/releases/1.82/Build/Cesium/Widgets/widgets.css"
       rel="stylesheet"
     />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap"
+      rel="stylesheet"
+    />
     <link href="index.css" rel="stylesheet" />
   </head>
   <body>
@@ -46,8 +52,9 @@
     </div>
 
     <div id="pageTwo">
+      <div id="cesiumContainer"></div>
       <div class="flight-details">
-        <h1>Flight Health Monitoring</h1>
+        <p class="health-title">Flight Health Monitoring</p>
         <div id="dashboard">
           <div class="parameter">Altitude: <span id="altitude">0</span> ft</div>
           <div class="parameter">Speed: <span id="speed">0</span> knots</div>
@@ -71,9 +78,8 @@
             Oil Pressure: <span id="oilPressure">0</span> psi
           </div>
         </div>
-        <div id="alerts"></div>
+        <!-- <div id="alerts"></div> -->
       </div>
-      <div id="cesiumContainer"></div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>

@@ -1,7 +1,20 @@
 // controllers/HealthController.js
 const getFlightPath = (req, res) => {
-  const params = req.body;
+  console.log("###", req.query);
 
+  const arrival = {
+    latitude: req.query.arrivalLat,
+    longitude: req.query.arrivalLon,
+  };
+
+  const destination = {
+    latitude: req.query.destLat,
+    longitude: req.query.destLon,
+  };
+
+  // const { arrival, destination } = req.body;
+
+  console.log("ARR", arrival, destination);
   const axios = require("axios");
   const PriorityQueue = require("js-priority-queue");
   const fs = require("fs");
@@ -23,6 +36,7 @@ const getFlightPath = (req, res) => {
 
     updateWeather(weatherData) {
       this.weather = weatherData;
+      console.log("FN - 4");
     }
 
     addEdge(neighbor, weight) {
@@ -44,6 +58,8 @@ const getFlightPath = (req, res) => {
 
   // Fetch weather data for given coordinates
   async function fetchSurfaceWeatherData(lat, lon) {
+    console.log("FN - 2");
+
     const url = `http://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${WEATHER_API_KEY}`;
     try {
       const response = await axios.get(url);
@@ -58,6 +74,8 @@ const getFlightPath = (req, res) => {
 
   // Calculate weather conditions at a given altitude
   function calculateWeatherAtAltitude(surfaceWeather, altitude) {
+    console.log("FN - 3");
+
     const lapseRate = 6.5 / 1000; // Temperature lapse rate in K/m
     const R = 287.05; // Specific gas constant for dry air in J/(kg·K)
     const g = 9.80665; // Gravitational acceleration in m/s²
@@ -95,6 +113,7 @@ const getFlightPath = (req, res) => {
 
     const visibilityAtAltitude =
       surfaceWeather.visibility + (altitude / 1000) * 1000; // Adjust visibility based on altitude
+    const rain = surfaceWeather.rain ? surfaceWeather.rain["1h"] || 0 : 0;
     return {
       temp: tempAtAltitudeK,
       pressure: pressureAtAltitude / 100, // Convert Pa to hPa
@@ -103,6 +122,7 @@ const getFlightPath = (req, res) => {
       windDirection: windDirectionAtAltitude,
       cloudCover: cloudCoverAtAltitudeClamped,
       visibility: visibilityAtAltitude,
+      rain: rain,
     };
   }
 
@@ -127,39 +147,8 @@ const getFlightPath = (req, res) => {
     });
   }
 
-  // Initialize grid based on Indian city coordinates
-  // async function initializeGrid(coordinates, altRange, cellSize) {
-  //   const grid = [];
-  //   for (let coord of coordinates) {
-  //     const lat = coord.latitude;
-  //     const lon = coord.longitude;
-  //     const latLayer = [];
-  //     for (let alt = altRange.min; alt <= altRange.max; alt += cellSize) {
-  //       const node = new Node(lat, lon, alt);
-  //       const surfaceWeather = await fetchSurfaceWeatherData(lat, lon);
-  //       if (surfaceWeather) {
-  //         const weatherAtAltitude = calculateWeatherAtAltitude(surfaceWeather, alt * 1000);  // Convert km to meters
-  //         node.updateWeather(weatherAtAltitude);
-  //       }
-  //       latLayer.push(node);
-  //     }
-  //     grid.push(latLayer);
-  //   }
-
-  //   for (let i = 0; i < grid.length; i++) {
-  //     for (let j = 0; j < grid[i].length; j++) {
-  //       const node = grid[i][j];
-  //       if (i > 0) node.addEdge(grid[i-1][j], Math.random());
-  //       if (i < grid.length - 1) node.addEdge(grid[i+1][j], Math.random());
-  //       if (j > 0) node.addEdge(grid[i][j-1], Math.random());
-  //       if (j < grid[i].length - 1) node.addEdge(grid[i][j+1], Math.random());
-  //     }
-  //   }
-
-  //   return grid;
-  // }
-  // Initialize grid based on Indian city coordinates
   async function initializeGrid(coordinates, altRange, cellSize) {
+    console.log("FN - 1");
     const grid = [];
     for (let coord of coordinates) {
       const lat = coord.latitude;
@@ -201,22 +190,28 @@ const getFlightPath = (req, res) => {
         }
       }
     }
-
+    console.log("FN - 7");
+    console.log("GRID", grid);
     return grid;
   }
 
   function calculateEdgeWeight(node1, node2) {
-    const windSpeedDifference = Math.abs(
-      node1.weather.windSpeed - node2.weather.windSpeed,
+    console.log("FN - 5");
+    const rainDifference = Math.abs(node1.weather.rain - node2.weather.rain);
+    const cloudCoverDifference = Math.abs(
+      node1.weather.cloudCover - node2.weather.cloudCover,
     );
 
-    const normalizedWindSpeedDifference = normalize(windSpeedDifference);
-    const weight = normalizedWindSpeedDifference;
+    const normalizedRainDifference = normalize(rainDifference);
+    const normalizedCloudCoverDifference = normalize(cloudCoverDifference);
+
+    const weight = normalizedRainDifference + normalizedCloudCoverDifference;
 
     return weight;
   }
 
   function normalize(value) {
+    console.log("FN - 6");
     const minValue = 0;
     const maxValue = 100;
     return (value - minValue) / (maxValue - minValue);
@@ -268,19 +263,43 @@ const getFlightPath = (req, res) => {
       const cellSize = 1; // Cell size in degrees for latitude and longitude, and km for altitude
 
       initializeGrid(coordinates, altRange, cellSize).then((grid) => {
-        const source = grid[0][0];
-        const destination = grid[grid.length - 1][grid[0].length - 1];
+        const source = findNode(grid, arrival.latitude, arrival.longitude);
+        const dest = findNode(
+          grid,
+          destination.latitude,
+          destination.longitude,
+        );
+        if (!source || !dest) {
+          // Handle case where nodes are not found
+          console.error("Source or destination node not found.");
+          res
+            .status(404)
+            .json({ error: "Source or destination node not found" });
+          return;
+        }
+        const path = dijkstra(grid, source, dest);
+        res.status(200).json({ path });
 
-        const path = dijkstra(grid, source, destination);
-
-        path.forEach((node) => node.displayInfo());
+        // path.forEach((node) => node.displayInfo());
       });
     })
     .catch((error) => {
       console.error(`Error reading coordinates from CSV: ${error}`);
+      res.status(500).json({ error: "Internal server error" });
     });
 };
-
+function findNode(grid, latitude, longitude) {
+  // Loop through the grid to find the node with matching coordinates
+  for (let i = 0; i < grid.length; i++) {
+    for (let j = 0; j < grid[i].length; j++) {
+      const node = grid[i][j];
+      if (node.latitude === latitude && node.longitude === longitude) {
+        return node;
+      }
+    }
+  }
+  return null; // Return null if node not found
+}
 module.exports = {
   getFlightPath,
 };

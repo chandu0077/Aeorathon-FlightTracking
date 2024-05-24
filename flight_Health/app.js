@@ -34,7 +34,7 @@ io.on("connection", (socket) => {
     if (alerts.length > 0) {
       io.emit("alert", alerts);
     } else {
-      io.emit("alert", ["All parameters are within safe ranges."]);
+      // io.emit("alert", ["All parameters are within safe ranges."]);
     }
   });
 });
