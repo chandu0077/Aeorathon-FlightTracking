@@ -156,3 +156,15 @@ label {
   color: #333;
   padding: 5px;
 }
+
+.parameter {
+  margin: 10px 0;
+}
+.alert {
+  color: red;
+  font-weight: bold;
+}
+
+#alerts {
+  padding: 0 2px;
+}
