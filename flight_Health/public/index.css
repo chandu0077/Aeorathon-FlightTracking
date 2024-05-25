@@ -29,6 +29,8 @@ body {
 }
 .safe {
   color: green;
+  font-weight: bold;
+  margin-left: 18px;
 }
 
 #pageOne {
@@ -164,6 +166,7 @@ label {
 .alert {
   color: red;
   font-weight: bold;
+  margin-left: 18px;
 }
 
 #alerts {

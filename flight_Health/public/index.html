@@ -143,8 +143,7 @@
             .map((alert) => `<div class="alert">${alert}</div>`)
             .join("");
         } else {
-          alertsDiv.innerHTML =
-            "<div>All parameters are within safe ranges.</div>";
+          alertsDiv.innerHTML = `<div class="safe">All parameters are in safe range.</div>`;
         }
       }
     </script>

@@ -37,7 +37,7 @@ const getFlightData = async () => {
 
   const getFlightPathData = async () => {
     return fetch(
-      `/path?arrivalLat=${fromData.lat}&arrivalLon=${fromData.lon}}&destLat=${toData.lat}&destLon=${toData.lon}`,
+      `/path?arrivalLat=${fromData.lat}&arrivalLon=${fromData.lon}&destLat=${toData.lat}&destLon=${toData.lon}`,
       // {
       //   // Adding method type
       //   method: "POST",
