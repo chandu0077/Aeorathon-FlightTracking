@@ -1,9 +1,14 @@
 const getFlightData = async () => {
   const asValue = document.getElementById("arrivalSelect");
   const dsValue = document.getElementById("destinationSelect");
+  var modal = document.getElementById("myModal");
+  var loader = document.getElementById("loader");
 
   console.log("asValue", asValue.value);
   console.log("dsValue", dsValue.value);
+
+  modal.style.display = "block";
+  loader.style.display = "block";
 
   const getLatLong = async (city) => {
     // Geo-Coding to get lat & long
@@ -26,6 +31,9 @@ const getFlightData = async () => {
 
   const fromData = await getLatLong(asValue.value);
   const toData = await getLatLong(dsValue.value);
+
+  console.log("FROM", fromData);
+  console.log("TO", toData);
 
   const getFlightPathData = async () => {
     return fetch(
@@ -62,9 +70,11 @@ const getFlightData = async () => {
   };
 
   // Comment this if statement to run the project with dummy data
-  if (Object.keys(fromData).length > 0) {
-    const flightPath = await getFlightPathData();
-  }
+  // if (Object.keys(fromData).length > 0) {
+  //   const flightPath = await getFlightPathData();
+  //   modal.style.display = "none";
+  //   loader.style.display = "none";
+  // }
 
   // call the api using fetch with arrival & destination.
 
@@ -74,7 +84,8 @@ const getFlightData = async () => {
   // Display/Hide Page One
   const pageOne = document.getElementById("pageOne");
   pageOne.style.display = "none";
-
+  modal.style.display = "none";
+  loader.style.display = "none";
   // Display/Hide Page Two
   const pageTwo = document.getElementById("pageTwo");
   pageTwo.style.display = "flex";
@@ -94,6 +105,7 @@ const modifyDestination = () => {};
 
 const arrivalSelect = document.getElementById("arrivalSelect");
 const destinationSelect = document.getElementById("destinationSelect");
+
 const cityNames = [
   "Mumbai",
   "Delhi",
@@ -218,4 +230,9 @@ const addDestination = (arrivalCity) => {
       }
     }
   }
+};
+
+const enableSubmit = () => {
+  console.log("enabling submit");
+  document.getElementById("submitBtn").disabled = false;
 };

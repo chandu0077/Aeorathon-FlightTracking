@@ -17,6 +17,9 @@
     <style></style>
   </head>
   <body>
+    <div id="myModal" class="modal"></div>
+    <div class="loader" id="loader"></div>
+
     <div id="pageOne">
       <h1 class="flight-title">AirBus Aerothon</h1>
       <div class="flight-inputs">
@@ -33,13 +36,15 @@
             <!-- Destination -->
             <label for="lname">To</label><br />
             <div id="destinationBlock">
-              <select id="destinationSelect">
+              <select id="destinationSelect" onchange="enableSubmit(this)">
                 <option disabled="" selected="">Select Option</option>
               </select>
             </div>
 
             <div class="form-submit">
               <input
+                id="submitBtn"
+                disabled="disabled"
                 type="button"
                 class="form-btn"
                 onclick="getFlightData()"
